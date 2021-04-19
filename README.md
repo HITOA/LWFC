@@ -14,3 +14,5 @@ TODO :
 -Allow to save PatternMap data to not recalculate each time (it took even more time than generating content some time).
 
 -Upgrading how entropy are calculated.
+
+-Remove the confusion between PatternSize and OutputSize
