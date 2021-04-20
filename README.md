@@ -5,7 +5,10 @@ I want to make a light "library" i guess for using wave function collapse algori
 There is an example of how it can be use in Program.cs.
 
 TODO : 
--Allow to use rectangular sample.
+
+-Allow to use rectangular sample. Done
+
+-Allow to compute rectangular output.
 
 -Allow to use Mirroring/Rotating etc.
 
