@@ -6,10 +6,6 @@ There is an example of how it can be use in Program.cs.
 
 TODO : 
 
--Allow to use Mirroring/Rotating etc.
-
--Optimize the algorithm to find pattern.
-
 -Remove the confusion between PatternSize and OutputSize
 
 DONE : 
