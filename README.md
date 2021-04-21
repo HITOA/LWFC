@@ -6,6 +6,8 @@ There is an example of how it can be use in Program.cs.
 
 TODO : 
 
+-Weighted selection
+
 -Allow to use Mirroring/Rotating etc.
 
 -Optimize the algorithm to find pattern.
