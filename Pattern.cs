@@ -58,16 +58,27 @@ public struct Pattern : IEquatable<Pattern>
 {
     public int[,] data;
     public int size;
+    public int count;
+    public float at;
+    public float weight
+    {
+        get
+        {
+            return (float)Math.Log10((Math.Pow((double)count / at, (double)at)) + 1);
+        }
+    }
 
     public List<int> top;
     public List<int> bottom;
     public List<int> right;
     public List<int> left;
 
-    public Pattern(int size)
+    public Pattern(int size, float at)
     {
         data = new int[size, size];
         this.size = size;
+        count = 1;
+        this.at = at;
 
         top = new List<int>();
         bottom = new List<int>();

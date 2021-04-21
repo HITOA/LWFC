@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 class WfcSolver
@@ -7,11 +8,13 @@ class WfcSolver
     //PatternMap patternMap;
     List<Pattern> patterns;
     Random rnd;
+    bool weighted;
 
-    public WfcSolver(List<Pattern> patterns, int seed)
+    public WfcSolver(List<Pattern> patterns, int seed, bool weighted = true)
     {
         this.patterns = patterns;
         this.rnd = new Random(seed);
+        this.weighted = weighted;
     }
 
     public int[,] Run(int outputWidth, int outputHeight)
@@ -87,9 +90,43 @@ class WfcSolver
 
     void CollapseCell(ref int[,][] output, (int x, int y) pos)
     {
-        int index = rnd.Next(0, output[pos.x, pos.y].Length - 1);
+        if (!weighted)
+        {
+            output[pos.x, pos.y] = new int[] { output[pos.x, pos.y][rnd.Next(0, output[pos.x, pos.y].Length)] };
+            return;
+        }
 
-        output[pos.x, pos.y] = new int[] { output[pos.x, pos.y][index] };
+        Pattern[] choice = new Pattern[output[pos.x, pos.y].Length];
+        float totalWeight = 0;
+
+        for(int i = 0; i < output[pos.x, pos.y].Length; i++)
+        {
+            choice[i] = patterns[output[pos.x, pos.y][i]];
+            totalWeight += choice[i].weight;
+        }
+
+        output[pos.x, pos.y] = new int[] { patterns.IndexOf(PickPatternRandomlyByWeight(choice, totalWeight)) };
+    }
+
+    Pattern PickPatternRandomlyByWeight(Pattern[] choice, float totalWeight)
+    {
+        float value = (float)rnd.NextDouble() * totalWeight;
+        float[] tree = new float[choice.Length];
+
+        tree[0] = choice[0].weight;
+
+        int i = 0;
+
+        while (i < tree.Length - 1)
+        {
+            if (tree[i] >= value)
+                break;
+
+            i++;
+            tree[i] = choice[i].weight + tree[i - 1];
+        }
+
+        return choice[i];
     }
 
     (int x, int y) GetCellByMinEntropy(int[,][] map, int width, int height)

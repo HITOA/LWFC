@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Xml.Serialization;
+using System.Diagnostics;
 
 public static class PatternMapSerializer
 {
@@ -47,13 +48,16 @@ public class PatternMapper
     bool tileableX;
     bool tileableY;
 
-    public PatternMapper(int[,] map, bool overlap = false, bool tileableX = false, bool tileableY = false)
+    float at;
+
+    public PatternMapper(int[,] map, bool overlap = false, bool tileableX = false, bool tileableY = false, float at = 3)
     {
         this.patterns = new List<Pattern>();
         this.map = new MapHelper(map, map.GetLength(0), map.GetLength(1));
         this.overlap = overlap;
         this.tileableX = tileableX;
         this.tileableY = tileableY;
+        this.at = at;
     }
 
     public int[,] Convert(int[,] patternMap)
@@ -88,11 +92,18 @@ public class PatternMapper
         {
             for (int x = 0; x < map.width - (tileableX ? 0 : size + 1); x += overlap ? 1 : size)
             {
-                Pattern currentPattern = new Pattern(size);
+                Pattern currentPattern = new Pattern(size, at);
                 currentPattern.data = map[x, y, size];
 
                 if (!patterns.Contains(currentPattern))
+                {
                     patterns.Add(currentPattern);
+                }else
+                {
+                    Pattern tmp = patterns[patterns.IndexOf(currentPattern)];
+                    tmp.count++;
+                    patterns[patterns.IndexOf(currentPattern)] = tmp;
+                }
             }
         }
     }
@@ -105,19 +116,19 @@ public class PatternMapper
         {
             for (int x = 0; x < map.width - (tileableX ? 0 : size + 1); x+= overlap ? 1 : size)
             {
-                Pattern currentPattern = new Pattern(size);
+                Pattern currentPattern = new Pattern(size, at);
                 currentPattern.data = map[x, y, size];
 
-                Pattern currentTopPattern = new Pattern(size);
+                Pattern currentTopPattern = new Pattern(size, at);
                 currentTopPattern.data = map[x, y + size, size];
 
-                Pattern currentBottomPattern = new Pattern(size);
+                Pattern currentBottomPattern = new Pattern(size, at);
                 currentBottomPattern.data = map[x, y - size, size];
 
-                Pattern currentRightPattern = new Pattern(size);
+                Pattern currentRightPattern = new Pattern(size, at);
                 currentRightPattern.data = map[x + size, y, size];
 
-                Pattern currentLeftPattern = new Pattern(size);
+                Pattern currentLeftPattern = new Pattern(size, at);
                 currentLeftPattern.data = map[x - size, y, size];
 
                 int indexOfCurrentPattern = patterns.IndexOf(currentPattern);
