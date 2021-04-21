@@ -6,16 +6,18 @@ There is an example of how it can be use in Program.cs.
 
 TODO : 
 
--Allow to use rectangular sample. Done
-
--Allow to compute rectangular output.
-
 -Allow to use Mirroring/Rotating etc.
 
 -Optimize the algorithm to find pattern.
 
--Allow to save PatternMap data to not recalculate each time (it took even more time than generating content some time).
-
--Upgrading how entropy are calculated.
-
 -Remove the confusion between PatternSize and OutputSize
+
+DONE : 
+
+-Allow to use rectangular sample.
+
+-Allow to compute rectangular output.
+
+-Upgrading how entropy are calculated. (actually it's just simplified but it's faster and give the same result sooo..)
+
+-Allow to save PatternMap data to not recalculate each time (it took even more time than generating content some time).
