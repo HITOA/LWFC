@@ -1,6 +1,11 @@
-﻿class MapHelper
+﻿public class MapHelper
 {
-    public int size
+    public int width
+    {
+        get;
+        private set;
+    }
+    public int height
     {
         get;
         private set;
@@ -11,12 +16,12 @@
     public int this[int x, int y]
     {
         get {
-            return map[mod(x, size), mod(y, size)];
+            return map[mod(x, width), mod(y, height)];
         }
 
         set
         {
-            map[mod(x, size), mod(y, size)] = value;
+            map[mod(x, width), mod(y, height)] = value;
         }
     }
 
@@ -38,10 +43,28 @@
         }
     }
 
-    public MapHelper(int[,] map, int size)
+    public MapHelper(int[,] map, int width, int height)
     {
         this.map = map;
-        this.size = size;
+        this.width = width;
+        this.height = height;
+    }
+
+    public void Rotate90()
+    {
+        int[,] tmp = new int[height, width];
+
+        for (int y = 0; y < height; y ++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                tmp[y, x] = map[x, y];
+            }
+        }
+
+        map = tmp;
+        width = map.GetLength(0);
+        height = map.GetLength(1);
     }
 
     private int mod(int x, int m) //source : https://stackoverflow.com/questions/1082917/mod-of-negative-number-is-melting-my-brain

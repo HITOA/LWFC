@@ -1,8 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Serialization;
 
-struct Pattern : IEquatable<Pattern>
+public struct SerializablePattern
+{
+    public int[] data;
+    public int size;
+    public int[] top;
+    public int[] bottom;
+    public int[] right;
+    public int[] left;
+
+    public SerializablePattern(Pattern pattern)
+    {
+        data = new int[pattern.size * pattern.size];
+        size = pattern.size;
+        top = pattern.top.ToArray();
+        bottom = pattern.bottom.ToArray();
+        right = pattern.right.ToArray();
+        left = pattern.left.ToArray();
+
+        int index = 0;
+        foreach(int d in pattern.data)
+        {
+            data[index] = d;
+            index++;
+        }
+    }
+
+    public Pattern ToPattern()
+    {
+        Pattern ret = new Pattern();
+
+        ret.data = new int[size, size];
+        ret.size = size;
+        ret.top = new List<int>(top);
+        ret.bottom = new List<int>(bottom);
+        ret.right = new List<int>(right);
+        ret.left = new List<int>(left);
+
+        int index = 0;
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                ret.data[x, y] = data[index];
+                index++;
+            }
+        }
+
+        return ret;
+    }
+}
+
+public struct Pattern : IEquatable<Pattern>
 {
     public int[,] data;
     public int size;

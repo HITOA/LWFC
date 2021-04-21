@@ -1,24 +1,70 @@
 ﻿using System.Collections.Generic;
+using System;
+using System.IO;
+using System.Xml.Serialization;
 
-class PatternMap
+public static class PatternMapSerializer
+{
+    public static void Save(List<Pattern> patterns, string path)
+    {
+        XmlSerializer serializer = new XmlSerializer(typeof(SerializablePattern[]));
+
+        SerializablePattern[] serializablePatterns = new SerializablePattern[patterns.Count];
+
+        for (int i = 0; i < serializablePatterns.Length; i++)
+        {
+            serializablePatterns[i] = new SerializablePattern(patterns[i]);
+        }
+
+        TextWriter writer = new StreamWriter(path);
+        serializer.Serialize(writer, serializablePatterns);
+        writer.Close();
+    }
+
+    public static List<Pattern> Load(string path)
+    {
+        TextReader reader = new StreamReader(path);
+        XmlSerializer serializer = new XmlSerializer(typeof(SerializablePattern[]));
+
+        SerializablePattern[] serializablePatterns = (SerializablePattern[])serializer.Deserialize(reader);
+        List<Pattern> patterns = new List<Pattern>(serializablePatterns.Length);
+
+        foreach(SerializablePattern sPattern in serializablePatterns)
+        {
+            patterns.Add(sPattern.ToPattern());
+        }
+
+        return patterns;
+    }
+}
+
+public class PatternMapper
 {
     public List<Pattern> patterns;
     public MapHelper map;
 
-    public PatternMap(int[,] map, int size)
+    bool overlap;
+    bool tileableX;
+    bool tileableY;
+
+    public PatternMapper(int[,] map, bool overlap = false, bool tileableX = false, bool tileableY = false)
     {
         this.patterns = new List<Pattern>();
-        this.map = new MapHelper(map, size);
+        this.map = new MapHelper(map, map.GetLength(0), map.GetLength(1));
+        this.overlap = overlap;
+        this.tileableX = tileableX;
+        this.tileableY = tileableY;
     }
 
-    public int[,] Convert(int[,] patternMap, int size)
+    public int[,] Convert(int[,] patternMap)
     {
-        int trueSize = size * patterns[0].size;
-        int[,] result = new int[trueSize, trueSize];
+        int trueSizeX = patternMap.GetLength(0) * patterns[0].size;
+        int trueSizeY = patternMap.GetLength(1) * patterns[0].size;
+        int[,] result = new int[trueSizeX, trueSizeY];
 
-        for(int y = 0; y < trueSize; y+= patterns[0].size)
+        for(int y = 0; y < trueSizeY; y+= patterns[0].size)
         {
-            for (int x = 0; x < trueSize; x += patterns[0].size)
+            for (int x = 0; x < trueSizeX; x += patterns[0].size)
             {
                 for (int _y = 0; _y < patterns[0].size; _y++)
                 {
@@ -35,12 +81,12 @@ class PatternMap
 
     public void FindPatterns(int size)
     {
-        if (map.size <= size)
+        if (map.width <= size || map.height <= size)
             return;
 
-        for (int y = 0; y < map.size; y++)
+        for (int y = 0; y < map.height - (tileableY ? 0 : size + 1); y += overlap ? 1 : size)
         {
-            for (int x = 0; x < map.size; x++)
+            for (int x = 0; x < map.width - (tileableX ? 0 : size + 1); x += overlap ? 1 : size)
             {
                 Pattern currentPattern = new Pattern(size);
                 currentPattern.data = map[x, y, size];
@@ -55,9 +101,9 @@ class PatternMap
     {
         int size = patterns[0].size;
 
-        for (int y = 0; y < map.size; y++)
+        for (int y = 0; y < map.height - (tileableY ? 0 : size + 1); y+= overlap ? 1 : size)
         {
-            for (int x = 0; x < map.size; x++)
+            for (int x = 0; x < map.width - (tileableX ? 0 : size + 1); x+= overlap ? 1 : size)
             {
                 Pattern currentPattern = new Pattern(size);
                 currentPattern.data = map[x, y, size];
@@ -96,5 +142,6 @@ class PatternMap
                 patterns[indexOfCurrentPattern].TryAddNeighbor(indexOfCurrentLeftPattern, Direction.left);
             }
         }
+
     }
 }

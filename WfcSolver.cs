@@ -4,27 +4,30 @@ using System.Linq;
 
 class WfcSolver
 {
-    PatternMap patternMap;
+    //PatternMap patternMap;
+    List<Pattern> patterns;
     Random rnd;
 
-    public WfcSolver(PatternMap patternMap, int seed)
+    public WfcSolver(List<Pattern> patterns, int seed)
     {
-        this.patternMap = patternMap;
+        this.patterns = patterns;
         this.rnd = new Random(seed);
     }
 
-    public int[,] Run(int outputSize)
+    public int[,] Run(int outputWidth, int outputHeight)
     {
-        int[,][] result = new int[outputSize, outputSize][];
-        InitArray(ref result, outputSize);
-        Compute(ref result, outputSize);
+        int[,][] result = new int[outputWidth, outputHeight][];
+        InitArray(ref result, outputWidth, outputHeight);
+        Compute(ref result, outputWidth, outputHeight);
 
-        int[,] trueResult = new int[outputSize, outputSize];
+        int[,] trueResult = new int[outputWidth, outputHeight];
 
-        for (int y = 0; y < outputSize; y++)
+        for (int y = 0; y < outputHeight; y++)
         {
-            for (int x = 0; x < outputSize; x++)
+            for (int x = 0; x < outputWidth; x++)
             {
+                if (result[x, y].Length < 1)
+                    return Run(outputWidth, outputHeight); //Can't Collapse so let's retry i guess
                 trueResult[x, y] = result[x, y][0]; //Might be an error here if it can't collapse
             }
         }
@@ -32,17 +35,17 @@ class WfcSolver
         return trueResult;
     }
 
-    void Compute(ref int[,][] output, int size)
+    void Compute(ref int[,][] output, int width, int height)
     {
-        while (!IsCollapsed(output, size))
+        while (!IsCollapsed(output))
         {
-            (int x, int y) current = GetCellByMinEntropy(output, size);
+            (int x, int y) current = GetCellByMinEntropy(output, width, height);
             CollapseCell(ref output, current);
-            Propagate(ref output, current, size);
+            Propagate(ref output, current, width, height);
         }
     }
 
-    void Propagate(ref int[,][] output, (int x, int y) pos, int size)
+    void Propagate(ref int[,][] output, (int x, int y) pos, int width, int height)
     {
         Queue<(int x, int y)> stack = new Queue<(int x, int y)>();
         stack.Enqueue(pos);
@@ -51,7 +54,7 @@ class WfcSolver
         {
             (int x, int y) current = stack.Dequeue();
 
-            foreach ((int x, int y) neighborOffset in GetValidNeighborOffset(current, size))
+            foreach ((int x, int y) neighborOffset in GetValidNeighborOffset(current, width, height))
             {
                 if (output[current.x + neighborOffset.x, current.y + neighborOffset.y].Length < 2)
                     continue;
@@ -89,15 +92,15 @@ class WfcSolver
         output[pos.x, pos.y] = new int[] { output[pos.x, pos.y][index] };
     }
 
-    (int x, int y) GetCellByMinEntropy(int[,][] map, int size)
+    (int x, int y) GetCellByMinEntropy(int[,][] map, int width, int height)
     {
         float mn = float.MaxValue;
-        float[,] entropyMap = new float[size, size];
+        float[,] entropyMap = new float[width, height];
         List<(int x, int y)> candidates = new List<(int x, int y)>();
 
-        for (int y = 0; y < map.GetLength(1); y++)
+        for (int y = 0; y < height; y++)
         {
-            for (int x = 0; x < map.GetLength(0); x++)
+            for (int x = 0; x < width; x++)
             {
                 if (map[x, y].Length <= 1)
                 {
@@ -113,9 +116,9 @@ class WfcSolver
             }
         }
 
-        for (int y = 0; y < map.GetLength(1); y++)
+        for (int y = 0; y < height; y++)
         {
-            for (int x = 0; x < map.GetLength(0); x++)
+            for (int x = 0; x < width; x++)
             {
                 if (entropyMap[x, y] == mn)
                     candidates.Add((x, y));
@@ -132,24 +135,25 @@ class WfcSolver
 
 
 
-    void InitArray(ref int[,][] output, int size)
+    void InitArray(ref int[,][] output, int width, int height)
     {
-        int[] patternlist = new int[patternMap.patterns.Count];
-        for (int i = 0; i < patternMap.patterns.Count; i++)
+        int[] patternlist = new int[patterns.Count];
+
+        for (int i = 0; i < patterns.Count; i++)
         {
             patternlist[i] = i;
         }
 
-        for (int y = 0; y < size; y++)
+        for (int y = 0; y < height; y++)
         {
-            for (int x = 0; x < size; x++)
+            for (int x = 0; x < width; x++)
             {
                 output[x, y] = patternlist;
             }
         }
     }
 
-    bool IsCollapsed(int[,][] map, int size)
+    bool IsCollapsed(int[,][] map)
     {
         int mx = 0;
 
@@ -162,12 +166,10 @@ class WfcSolver
 
     float CalculateEntropyOfCell(int[,][] map, (int x, int y) pos)
     {
-        float entropy = map[pos.x, pos.y].Sum();
-        entropy = entropy * (float)Math.Log(entropy);
-        return entropy;
+        return map[pos.x, pos.y].Sum();
     }
 
-    (int x, int y)[] GetValidNeighborOffset((int x, int y) pos, int size)
+    (int x, int y)[] GetValidNeighborOffset((int x, int y) pos, int width, int height)
     {
         List<(int x, int y)> result = new List<(int x, int y)>();
 
@@ -181,10 +183,10 @@ class WfcSolver
                 if (x != 0 && y != 0)
                     continue;
 
-                if ((x + pos.x) >= size || (x + pos.x) < 0)
+                if ((x + pos.x) >= width || (x + pos.x) < 0)
                     continue;
 
-                if ((y + pos.y) >= size || (y + pos.y) < 0)
+                if ((y + pos.y) >= height || (y + pos.y) < 0)
                     continue;
 
                 result.Add((x, y));
@@ -228,7 +230,7 @@ class WfcSolver
 
         foreach (int i in patternsIndex)
         {
-            patterns.Add(patternMap.patterns[i]);
+            patterns.Add(this.patterns[i]);
         }
 
         return patterns;
